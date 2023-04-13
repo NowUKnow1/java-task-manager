@@ -40,7 +40,7 @@
     <!-- https://checkstyle.org/config_filters.html#SuppressionFilter -->
     <module name="SuppressionFilter">
         <property name="file" value="${org.checkstyle.sun.suppressionfilter.config}"
-                  default="checkstyle-suppressions.xml" />
+                  default="checkstyle-suppressions.xml"/>
         <property name="optional" value="true"/>
     </module>
 
@@ -70,12 +70,12 @@
 
     <!-- Miscellaneous other checks.                   -->
     <!-- See https://checkstyle.org/config_misc.html -->
-    <!-- <module name="RegexpSingleline"> -->
-    <!--     <property name="format" value="\s+$"/> -->
-    <!--     <property name="minimum" value="0"/> -->
-    <!--     <property name="maximum" value="0"/> -->
-    <!--    <property name="message" value="Line has trailing spaces."/> -->
-    <!-- </module> -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="minimum" value="0"/>
+        <property name="maximum" value="0"/>
+        <property name="message" value="Line has trailing spaces."/>
+    </module>
 
     <!-- Checks for Headers                                -->
     <!-- See https://checkstyle.org/config_header.html   -->
@@ -88,16 +88,16 @@
 
         <!-- Checks for Javadoc comments.                     -->
         <!-- See https://checkstyle.org/config_javadoc.html -->
-        <module name="InvalidJavadocPosition"/>
-        <!-- <module name="JavadocMethod"/> -->
-        <module name="JavadocType"/>
+        <!--        <module name="InvalidJavadocPosition"/>-->
+        <!--        <module name="JavadocMethod"/>-->
+        <!--        <module name="JavadocType"/>-->
         <!-- <module name="JavadocVariable"/> -->
-        <!-- <module name="JavadocStyle"/> -->
+        <!--        <module name="JavadocStyle"/>-->
         <!-- <module name="MissingJavadocMethod"/> -->
 
         <!-- Checks for Naming Conventions.                  -->
         <!-- See https://checkstyle.org/config_naming.html -->
-        <!-- <module name="ConstantName"/> -->
+        <module name="ConstantName"/>
         <module name="LocalFinalVariableName"/>
         <module name="LocalVariableName"/>
         <module name="MemberName"/>
@@ -105,7 +105,7 @@
         <module name="PackageName"/>
         <module name="ParameterName"/>
         <module name="StaticVariableName"/>
-        <!-- <module name="TypeName"/>  -->
+        <module name="TypeName"/>
 
         <!-- Checks for imports                              -->
         <!-- See https://checkstyle.org/config_import.html -->
@@ -126,12 +126,12 @@
         <module name="EmptyForIteratorPad"/>
         <module name="GenericWhitespace"/>
         <module name="MethodParamPad"/>
-        <!-- <module name="NoWhitespaceAfter"/> -->
+        <module name="NoWhitespaceAfter"/>
         <module name="NoWhitespaceBefore"/>
         <module name="OperatorWrap"/>
         <module name="ParenPad"/>
         <module name="TypecastParenPad"/>
-        <!--<module name="WhitespaceAfter"/> -->
+        <module name="WhitespaceAfter"/>
         <module name="WhitespaceAround"/>
 
         <!-- Modifier Checks                                    -->
@@ -151,10 +151,10 @@
         <!-- See https://checkstyle.org/config_coding.html -->
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
-        <!-- <module name="HiddenField"/> -->
+        <!--        <module name="HiddenField"/>-->
         <module name="IllegalInstantiation"/>
         <module name="InnerAssignment"/>
-        <!-- <module name="MagicNumber"/> -->
+        <!--        <module name="MagicNumber"/>-->
         <module name="MissingSwitchDefault"/>
         <module name="MultipleVariableDeclarations"/>
         <module name="SimplifyBooleanExpression"/>
@@ -162,27 +162,23 @@
 
         <!-- Checks for class design                         -->
         <!-- See https://checkstyle.org/config_design.html -->
-        <!-- <module name="DesignForExtension"/> -->
+        <!--        <module name="DesignForExtension"/>-->
         <module name="FinalClass"/>
         <!-- <module name="HideUtilityClassConstructor"/> -->
         <module name="InterfaceIsType"/>
-        <!-- <module name="VisibilityModifier"/> -->
+        <module name="VisibilityModifier"/>
 
         <!-- Miscellaneous other checks.                   -->
         <!-- See https://checkstyle.org/config_misc.html -->
         <module name="ArrayTypeStyle"/>
         <!-- <module name="FinalParameters"/> -->
-        <module name="TodoComment"/>
+        <!-- <module name="TodoComment"/> -->
         <module name="UpperEll"/>
-
-        <!-- <module name="Indentation"> -->
-        <!--     <property name="basicOffset" value="4"/> -->
-        <!-- </module> -->
 
         <!-- https://checkstyle.org/config_filters.html#SuppressionXpathFilter -->
         <module name="SuppressionXpathFilter">
             <property name="file" value="${org.checkstyle.sun.suppressionxpathfilter.config}"
-                      default="checkstyle-xpath-suppressions.xml" />
+                      default="checkstyle-xpath-suppressions.xml"/>
             <property name="optional" value="true"/>
         </module>
 
