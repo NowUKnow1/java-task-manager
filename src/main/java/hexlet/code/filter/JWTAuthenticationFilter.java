@@ -1,8 +1,9 @@
 package hexlet.code.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hexlet.code.component.JWTHelper;
 import hexlet.code.dto.LoginDto;
+import hexlet.code.component.JWTHelper;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,9 +20,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final JWTHelper jwtHelper;
+    private static final ObjectMapper MAPPER = new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public JWTAuthenticationFilter(final AuthenticationManager authenticationManager,
                                    final RequestMatcher loginRequest,
@@ -34,27 +37,20 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     public Authentication attemptAuthentication(final HttpServletRequest request,
                                                 final HttpServletResponse response) throws AuthenticationException {
-        System.out.println("Attempt authentication1");
         final LoginDto loginData = getLoginData(request);
-        System.out.println("Login data is extracted!");
-        System.out.println(loginData.getEmail());
-        System.out.println(loginData.getPassword());
         final var authRequest = new UsernamePasswordAuthenticationToken(
                 loginData.getEmail(),
                 loginData.getPassword()
         );
         setDetails(request, authRequest);
-        System.out.println("Attempt authentication2");
         return getAuthenticationManager().authenticate(authRequest);
     }
 
     private LoginDto getLoginData(final HttpServletRequest request) throws AuthenticationException {
-        System.out.println("Extracting login data!");
         try {
             final String json = request.getReader()
                     .lines()
                     .collect(Collectors.joining());
-            System.out.println(json);
             return MAPPER.readValue(json, LoginDto.class);
         } catch (IOException e) {
             throw new BadCredentialsException("Can't extract login data from request");
@@ -66,11 +62,9 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             final HttpServletResponse response,
                                             final FilterChain chain,
                                             final Authentication authResult) throws IOException {
-        System.out.println("We are successfully authenticating!");
         final UserDetails user = (UserDetails) authResult.getPrincipal();
         final String token = jwtHelper.expiring(Map.of(SPRING_SECURITY_FORM_USERNAME_KEY, user.getUsername()));
 
-        response.getWriter().println(token);
+        response.getWriter().print(token);
     }
-
 }

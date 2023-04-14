@@ -22,28 +22,35 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.util.List;
 
+import static hexlet.code.controller.UserController.USER_CONTROLLER_PATH;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
-import static hexlet.code.controller.UserController.USER_CONTROLLER_PATH;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-
     public static final String LOGIN = "/login";
-    public static final List<GrantedAuthority> DEFAULT_AUTHORITIES = List.of(new SimpleGrantedAuthority("USER"));
+
+    public static final List<GrantedAuthority> DEFAULT_AUTHORITIES
+            = List.of(new SimpleGrantedAuthority("USER"));
 
     private final RequestMatcher publicUrls;
+
     private final RequestMatcher loginRequest;
+
     private final UserDetailsService userDetailsService;
+
     private final PasswordEncoder passwordEncoder;
+
     private final JWTHelper jwtHelper;
 
 
     public SecurityConfig(@Value("${base-url}") final String baseUrl,
                           final UserDetailsService userDetailsService,
-                          final PasswordEncoder passwordEncoder, final JWTHelper jwtHelper) {
+                          final PasswordEncoder passwordEncoder,
+                          final JWTHelper jwtHelper) {
+
         this.loginRequest = new AntPathRequestMatcher(baseUrl + LOGIN, POST.toString());
         this.publicUrls = new OrRequestMatcher(
                 loginRequest,
@@ -51,37 +58,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 new AntPathRequestMatcher(baseUrl + USER_CONTROLLER_PATH, GET.toString()),
                 new NegatedRequestMatcher(new AntPathRequestMatcher(baseUrl + "/**"))
         );
+
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtHelper = jwtHelper;
     }
 
-
     @Override
-    protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder);
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
     }
 
-
     @Override
-    public void configure(final HttpSecurity http) throws Exception {
-
+    protected void configure(HttpSecurity http) throws Exception {
         final var authenticationFilter = new JWTAuthenticationFilter(
-                authenticationManagerBean(),
-                loginRequest,
-                jwtHelper
-        );
+                authenticationManagerBean(), loginRequest, jwtHelper);
 
         final var authorizationFilter = new JWTAuthorizationFilter(
                 publicUrls,
                 jwtHelper
         );
 
-        //for dev purpose I turned off request filtering and permitted all requests
         http.csrf().disable()
                 .authorizeRequests()
-                //.antMatchers("/**").permitAll();
                 .requestMatchers(publicUrls).permitAll()
                 .anyRequest().authenticated()
                 .and()
@@ -90,8 +89,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().disable()
                 .formLogin().disable()
                 .httpBasic().disable()
-                .logout().disable();
-
-        http.headers().frameOptions().disable();
+                .logout().disable()
+                .headers().frameOptions().disable();
     }
 }

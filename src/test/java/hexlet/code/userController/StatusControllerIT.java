@@ -2,8 +2,10 @@ package hexlet.code.userController;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import hexlet.code.config.SpringConfigForIT;
-import hexlet.code.dto.StatusDto;
+import hexlet.code.dto.LabelDto;
+import hexlet.code.model.Label;
 import hexlet.code.model.Status;
+import hexlet.code.model.User;
 import hexlet.code.repository.StatusRepository;
 import hexlet.code.repository.UserRepository;
 import hexlet.code.utils.TestUtils;
@@ -19,20 +21,19 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.List;
 
 import static hexlet.code.config.SpringConfigForIT.TEST_PROFILE;
-import static hexlet.code.controller.StatusController.ID;
-import static hexlet.code.controller.StatusController.STATUS_CONTROLLER_PATH;
+import static hexlet.code.utils.TestUtils.ID;
+import static hexlet.code.utils.TestUtils.BASE_STATUS_URL;
 import static hexlet.code.utils.TestUtils.TEST_USERNAME;
 import static hexlet.code.utils.TestUtils.asJson;
 import static hexlet.code.utils.TestUtils.fromJson;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -40,167 +41,92 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = SpringConfigForIT.class)
 public class StatusControllerIT {
-
+    @Autowired
+    private StatusRepository taskStatusRepository;
+    @Autowired
+    private TestUtils utils;
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private StatusRepository statusRepository;
-
-    @Autowired
-    private TestUtils utils;
-
     @AfterEach
     public void clear() {
-        utils.tearDown();
+        utils.clearDB();
     }
 
-
     @Test
-    public void testCreateStatus() throws Exception {
+    public void testCreatedLabel() throws Exception {
         utils.regDefaultUser();
-
-        final var statusDto = new StatusDto("new");
-
-        final var postRequest = post(STATUS_CONTROLLER_PATH)
-                .content(asJson(statusDto))
-                .contentType(APPLICATION_JSON);
-
-        final var response = utils.perform(postRequest, TEST_USERNAME)
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse();
-
-        final Status expectedStatus = statusRepository.findAll().get(0);
-
-        final Status status = fromJson(response.getContentAsString(), new TypeReference<>() {
-        });
-
-        assertTrue(statusRepository.existsById(status.getId()));
-        assertEquals(expectedStatus.getId(), status.getId());
-        assertEquals(expectedStatus.getName(), status.getName());
+        utils.createNewTaskStatus().andExpect(status().isCreated());
+        assertEquals(1, taskStatusRepository.count());
     }
 
-
     @Test
-    public void testGetStatusById() throws Exception {
+    public void testGetAll() throws Exception {
         utils.regDefaultUser();
-
-        final var statusDto = new StatusDto("new");
-
-        final var postRequest = post(STATUS_CONTROLLER_PATH)
-                .content(asJson(statusDto))
-                .contentType(APPLICATION_JSON);
-
-        utils.perform(postRequest, TEST_USERNAME)
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse();
-
-
-        final var response = utils.perform(get(STATUS_CONTROLLER_PATH + ID,
-                                statusRepository.findAll().get(0).getId()),
-                        TEST_USERNAME)
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse();
-        final Status status = fromJson(response.getContentAsString(), new TypeReference<>() {
-        });
-
-        assertEquals(statusDto.getName(), status.getName());
-    }
-
-
-    @Test
-    public void testCreatedStatusFails() throws Exception {
-        utils.regDefaultUser();
-
-        final var statusDto = new StatusDto("");
-
-        final var postRequest = post(STATUS_CONTROLLER_PATH)
-                .content(asJson(statusDto))
-                .contentType(APPLICATION_JSON);
-
-        utils.perform(postRequest, TEST_USERNAME)
-                .andExpect(status().is(422));
-
-        assertEquals(0, statusRepository.count());
-    }
-
-
-    @Test
-    public void testUpdateStatus() throws Exception {
-        utils.regDefaultUser();
-
-        final var postRequest = post(STATUS_CONTROLLER_PATH)
-                .content(asJson(new StatusDto("new")))
-                .contentType(APPLICATION_JSON);
-        utils.perform(postRequest, TEST_USERNAME);
-        Status createdStatus = statusRepository.findAll().get(0);
-
-        final var statusDto = new StatusDto("verified");
-
-        final var putRequest = put(STATUS_CONTROLLER_PATH + ID, createdStatus.getId())
-                .content(asJson(statusDto))
-                .contentType(APPLICATION_JSON);
-        final var response = utils.perform(putRequest, TEST_USERNAME)
+        User user = userRepository.findAll().get(0);
+        utils.createNewTaskStatus();
+        final var response = utils.perform(get(BASE_STATUS_URL), user.getEmail())
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse();
 
-        createdStatus = statusRepository.findAll().get(0);
-
-        final Status status = fromJson(response.getContentAsString(), new TypeReference<>() {
+        final List<Label> labels = fromJson(response.getContentAsString(), new TypeReference<>() {
         });
 
-        assertEquals(createdStatus.getId(), status.getId());
-        assertEquals(createdStatus.getName(), statusDto.getName());
+        assertThat(labels).hasSize(1);
     }
 
     @Test
-    public void getAllStatuses() throws Exception {
+    public void testGetLabelById() throws Exception {
         utils.regDefaultUser();
-
-        final var statusDto = new StatusDto("verified");
-
-        final var postRequest = post(STATUS_CONTROLLER_PATH)
-                .content(asJson(statusDto))
-                .contentType(APPLICATION_JSON);
-        utils.perform(postRequest, TEST_USERNAME)
-                .andExpect(status().isCreated());
-
-        final var response = utils.perform(get(STATUS_CONTROLLER_PATH), TEST_USERNAME)
+        User user = userRepository.findAll().get(0);
+        utils.createNewTaskStatus();
+        Status expectedStatus = taskStatusRepository.findAll().get(0);
+        final var responseGet = utils.perform(
+                        get(BASE_STATUS_URL + ID, expectedStatus.getId()),
+                        user.getEmail())
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse();
 
-        final List<Status> statuses = fromJson(response.getContentAsString(), new TypeReference<>() {
+        Status taskStatus = fromJson(responseGet.getContentAsString(), new TypeReference<Status>() {
         });
 
-        assertThat(statuses.size()).isEqualTo(1);
+        assertEquals(expectedStatus.getCreatedAt().getTime(), taskStatus.getCreatedAt().getTime());
+        assertEquals(expectedStatus.getName(), taskStatus.getName());
     }
 
+    @Test
+    public void testUpdateLabel() throws Exception {
+        utils.regDefaultUser();
+        User user = userRepository.findAll().get(0);
+        utils.createNewTaskStatus();
+        Status expectedStatus = taskStatusRepository.findAll().get(0);
+        LabelDto newLabelDto = new LabelDto("new new status");
+        final var responsePut = utils.perform(
+                        put(BASE_STATUS_URL + ID, expectedStatus.getId())
+                                .content(asJson(newLabelDto))
+                                .contentType(APPLICATION_JSON), user.getEmail())
+                .andReturn().getResponse();
+
+        Label expected = fromJson(responsePut.getContentAsString(), new TypeReference<Label>() {
+        });
+
+        assertTrue(taskStatusRepository.existsById(expected.getId()));
+        assertThat(expected.getName()).isEqualTo("new new status");
+    }
 
     @Test
-    public void deleteStatus() throws Exception {
+    public void deleteLabelById() throws Exception {
         utils.regDefaultUser();
-
-        final var statusDto = new StatusDto("verified");
-
-        final var postRequest = post(STATUS_CONTROLLER_PATH)
-                .content(asJson(statusDto))
-                .contentType(APPLICATION_JSON);
-        utils.perform(postRequest, TEST_USERNAME)
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse();
-
-        utils.perform(delete(STATUS_CONTROLLER_PATH + ID,
-                                statusRepository.findAll().get(0).getId()),
-                        TEST_USERNAME)
+        assertThat(taskStatusRepository.count()).isEqualTo(0);
+        utils.createNewTaskStatus();
+        assertThat(taskStatusRepository.count()).isEqualTo(1);
+        Status taskStatus = taskStatusRepository.findAll().get(0);
+        utils.perform(delete(BASE_STATUS_URL + ID, taskStatus.getId()), TEST_USERNAME)
                 .andExpect(status().isOk());
-
-        assertEquals(0, statusRepository.count());
+        assertThat(taskStatusRepository.count()).isEqualTo(0);
     }
+
 
 }

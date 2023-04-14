@@ -15,30 +15,29 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
 import static hexlet.code.config.SpringConfigForIT.TEST_PROFILE;
 import static hexlet.code.config.security.SecurityConfig.LOGIN;
-import static hexlet.code.controller.UserController.ID;
-import static hexlet.code.controller.UserController.USER_CONTROLLER_PATH;
-
+import static hexlet.code.utils.TestUtils.ID;
+import static hexlet.code.utils.TestUtils.BASE_URL;
+import static hexlet.code.utils.TestUtils.BASE_USER_URL;
 import static hexlet.code.utils.TestUtils.TEST_USERNAME;
 import static hexlet.code.utils.TestUtils.TEST_USERNAME_2;
 import static hexlet.code.utils.TestUtils.asJson;
 import static hexlet.code.utils.TestUtils.fromJson;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -55,9 +54,8 @@ public class UserControllerIT {
 
     @AfterEach
     public void clear() {
-        utils.tearDown();
+        utils.clearDB();
     }
-
 
     @Test
     public void registration() throws Exception {
@@ -66,52 +64,13 @@ public class UserControllerIT {
         assertEquals(1, userRepository.count());
     }
 
-
-    @Test
-    public void createInvalidFistNameUser() throws Exception {
-
-        final var userDto = new UserDto(TEST_USERNAME, "", "last name", "pwd");
-
-        final var postRequest = MockMvcRequestBuilders.post(USER_CONTROLLER_PATH)
-                .content(asJson(userDto))
-                .contentType(APPLICATION_JSON);
-
-        utils.perform(postRequest, TEST_USERNAME).andExpect(status().is(422));
-    }
-
-
-    @Test
-    public void createInvalidLastNameUser() throws Exception {
-
-        final var userDto = new UserDto(TEST_USERNAME, "first name", "", "pwd");
-
-        final var postRequest = MockMvcRequestBuilders.post(USER_CONTROLLER_PATH)
-                .content(asJson(userDto))
-                .contentType(APPLICATION_JSON);
-
-        utils.perform(postRequest, TEST_USERNAME).andExpect(status().is(422));
-    }
-
-
-    @Test
-    public void createInvalidPasswordUser() throws Exception {
-
-        final var userDto = new UserDto(TEST_USERNAME, "first name", "last name", "pw");
-
-        final var postRequest = MockMvcRequestBuilders.post(USER_CONTROLLER_PATH)
-                .content(asJson(userDto))
-                .contentType(APPLICATION_JSON);
-
-        utils.perform(postRequest, TEST_USERNAME).andExpect(status().is(422));
-    }
-
-
     @Test
     public void getUserById() throws Exception {
         utils.regDefaultUser();
         final User expectedUser = userRepository.findAll().get(0);
+
         final var response = utils.perform(
-                        get(USER_CONTROLLER_PATH + ID, expectedUser.getId()),
+                        get(BASE_USER_URL + ID, expectedUser.getId()),
                         expectedUser.getEmail()
                 ).andExpect(status().isOk())
                 .andReturn()
@@ -126,11 +85,17 @@ public class UserControllerIT {
         assertEquals(expectedUser.getLastName(), user.getLastName());
     }
 
-
     @Test
     public void getAllUsers() throws Exception {
         utils.regDefaultUser();
-        final var response = utils.perform(get(USER_CONTROLLER_PATH))
+        UserDto userDto = new UserDto(
+                "name",
+                "fname",
+                TEST_USERNAME_2,
+                "pass"
+        );
+        utils.regUser(userDto);
+        final var response = utils.perform(get(BASE_USER_URL))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse();
@@ -138,42 +103,42 @@ public class UserControllerIT {
         final List<User> users = fromJson(response.getContentAsString(), new TypeReference<>() {
         });
 
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(2);
     }
 
+    @Test
+    public void twiceRegTheSameUserFail() throws Exception {
+        utils.regDefaultUser().andExpect(status().isCreated());
+        utils.regDefaultUser().andExpect(status().isUnprocessableEntity());
 
-    //test when login feature is ready
+        assertEquals(1, userRepository.count());
+    }
+
     @Test
     public void login() throws Exception {
         utils.regDefaultUser();
         final LoginDto loginDto = new LoginDto(
-                utils.getTestRegistrationDto().getFirstName(),
-                utils.getTestRegistrationDto().getLastName(),
-                utils.getTestRegistrationDto().getEmail(),
-                utils.getTestRegistrationDto().getPassword()
+                utils.getTestUserDto().getEmail(),
+                utils.getTestUserDto().getPassword()
         );
-        final var loginRequest = MockMvcRequestBuilders
-                .post(LOGIN)
+        final var loginRequest = post(BASE_URL + LOGIN)
                 .content(asJson(loginDto))
                 .contentType(APPLICATION_JSON);
         utils.perform(loginRequest).andExpect(status().isOk());
     }
 
 
-    //test when login feature is ready
     @Test
     public void loginFail() throws Exception {
         final LoginDto loginDto = new LoginDto(
-                utils.getTestRegistrationDto().getEmail(),
-                utils.getTestRegistrationDto().getPassword(),
-                utils.getTestRegistrationDto().getFirstName(),
-                utils.getTestRegistrationDto().getLastName()
+                utils.getTestUserDto().getEmail(),
+                utils.getTestUserDto().getPassword()
         );
-        final var loginRequest = MockMvcRequestBuilders.post(LOGIN)
-                .content(asJson(loginDto)).contentType(APPLICATION_JSON);
+        final var loginRequest = post(BASE_URL + LOGIN)
+                .content(asJson(loginDto))
+                .contentType(APPLICATION_JSON);
         utils.perform(loginRequest).andExpect(status().isUnauthorized());
     }
-
 
     @Test
     public void updateUser() throws Exception {
@@ -181,9 +146,12 @@ public class UserControllerIT {
 
         final Long userId = userRepository.findByEmail(TEST_USERNAME).get().getId();
 
-        final var userDto = new UserDto(TEST_USERNAME_2, "new name", "new last name", "new pwd");
+        final var userDto = new UserDto("new name",
+                "new last name",
+                TEST_USERNAME_2,
+                "new pass");
 
-        final var updateRequest = put(USER_CONTROLLER_PATH + ID, userId)
+        final var updateRequest = put(BASE_USER_URL + ID, userId)
                 .content(asJson(userDto))
                 .contentType(APPLICATION_JSON);
 
@@ -200,28 +168,28 @@ public class UserControllerIT {
 
         final Long userId = userRepository.findByEmail(TEST_USERNAME).get().getId();
 
-        utils.perform(delete(USER_CONTROLLER_PATH + ID, userId), TEST_USERNAME)
+        utils.perform(delete(BASE_USER_URL + ID, userId), TEST_USERNAME)
                 .andExpect(status().isOk());
 
         assertEquals(0, userRepository.count());
     }
 
-
     @Test
     public void deleteUserFails() throws Exception {
         utils.regDefaultUser();
         utils.regUser(new UserDto(
+                "firstName",
+                "lastName",
                 TEST_USERNAME_2,
-                "fname",
-                "lname",
-                "pwd"
+                "pass"
         ));
 
         final Long userId = userRepository.findByEmail(TEST_USERNAME).get().getId();
 
-        utils.perform(delete(USER_CONTROLLER_PATH + ID, userId), TEST_USERNAME_2)
+        utils.perform(delete(BASE_USER_URL + ID, userId), TEST_USERNAME_2)
                 .andExpect(status().isForbidden());
 
         assertEquals(2, userRepository.count());
     }
+
 }
