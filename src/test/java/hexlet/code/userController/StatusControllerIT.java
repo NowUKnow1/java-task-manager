@@ -95,7 +95,6 @@ public class StatusControllerIT {
         assertEquals(expectedStatus.getCreatedAt().getTime(), taskStatus.getCreatedAt().getTime());
         assertEquals(expectedStatus.getName(), taskStatus.getName());
     }
-
     @Test
     public void testUpdateLabel() throws Exception {
         utils.regDefaultUser();
