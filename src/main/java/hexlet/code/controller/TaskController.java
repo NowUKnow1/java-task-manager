@@ -3,7 +3,6 @@ package hexlet.code.controller;
 import com.querydsl.core.types.Predicate;
 import hexlet.code.dto.TaskDto;
 import hexlet.code.model.Task;
-import hexlet.code.repository.TaskRepository;
 import hexlet.code.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -41,7 +40,6 @@ public class TaskController {
             @taskRepository.findById(#id).get().getAuthor().getEmail() == authentication.getName()
         """;
 
-    private final TaskRepository taskRepository;
     private final TaskService taskService;
 
 
@@ -61,8 +59,8 @@ public class TaskController {
     @Schema (implementation = Task.class))
     ))
     @GetMapping
-    public Iterable<Task> getAllTasks(@QuerydslPredicate final Predicate predicate) {
-        return predicate == null ? taskRepository.findAll() : taskRepository.findAll(predicate);
+    public Iterable<Task> getAllTasks(@QuerydslPredicate(root = Task.class) Predicate predicate) {
+        return taskService.getAllTasks(predicate);
     }
 
     @Operation(summary = "Get a task by id")
@@ -72,7 +70,7 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task with this id is not found")})
     @GetMapping(ID)
     public Task getTask(@PathVariable long id) {
-        return taskRepository.findById(id).get();
+        return taskService.getTaskById(id);
     }
 
 
@@ -96,7 +94,7 @@ public class TaskController {
     @DeleteMapping(ID)
     @PreAuthorize(ONLY_TASK_OWNER)
     public void delete(@PathVariable final long id) {
-        taskRepository.deleteById(id);
+        taskService.deleteTaskById(id);
     }
 
 }

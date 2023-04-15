@@ -2,7 +2,6 @@ package hexlet.code.controller;
 
 import hexlet.code.dto.LabelDto;
 import hexlet.code.model.Label;
-import hexlet.code.repository.LabelRepository;
 import hexlet.code.service.LabelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -38,9 +37,6 @@ public class LabelController {
 
     private final LabelService labelService;
 
-    private final LabelRepository labelRepository;
-
-
     @Operation(summary = "Create new label")
     @ApiResponse(responseCode = "201", description = "Label created")
     @PostMapping
@@ -57,9 +53,7 @@ public class LabelController {
     ))
     @GetMapping
     public List<Label> getAll() {
-        return labelRepository.findAll()
-                .stream()
-                .toList();
+        return labelService.getAllLabels();
     }
 
 
@@ -70,7 +64,7 @@ public class LabelController {
             @ApiResponse(responseCode = "404", description = "Label with this id is not found")})
     @GetMapping(ID)
     public Label getLabelById(@PathVariable final Long id) {
-        return labelRepository.findById(id).get();
+        return labelService.getLabelById(id);
     }
 
 
@@ -92,7 +86,7 @@ public class LabelController {
             @ApiResponse(responseCode = "404", description = "Label with this id is not found")})
     @DeleteMapping(ID)
     public void delete(@PathVariable final long id) {
-        labelRepository.deleteById(id);
+        labelService.deleteLabelById(id);
     }
 
 }

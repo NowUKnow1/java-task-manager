@@ -2,7 +2,6 @@ package hexlet.code.controller;
 
 import hexlet.code.dto.UserDto;
 import hexlet.code.model.User;
-import hexlet.code.repository.UserRepository;
 import hexlet.code.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -44,8 +43,6 @@ public class UserController {
         """;
 
     private final UserService userService;
-    private final UserRepository userRepository;
-
     @Operation(summary = "Create new user")
     @ApiResponse(responseCode = "201", description = "User created")
     @PostMapping
@@ -60,9 +57,7 @@ public class UserController {
     @Content(schema = @Schema(implementation = User.class))))
     @GetMapping
     public List<User> getAll() {
-        return userRepository.findAll()
-                .stream()
-                .toList();
+        return userService.getAllUsers();
     }
 
 
@@ -72,7 +67,7 @@ public class UserController {
     ))
     @GetMapping(ID)
     public User getUserById(@PathVariable final Long id) {
-        return userRepository.findById(id).get();
+        return userService.getUserById(id);
     }
 
 
@@ -92,7 +87,7 @@ public class UserController {
     @DeleteMapping(ID)
     @PreAuthorize(ONLY_OWNER_BY_ID)
     public void delete(@PathVariable final long id) {
-        userRepository.deleteById(id);
+        userService.delete(id);
     }
 
 }

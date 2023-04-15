@@ -2,7 +2,6 @@ package hexlet.code.controller;
 
 import hexlet.code.dto.StatusDto;
 import hexlet.code.model.Status;
-import hexlet.code.repository.StatusRepository;
 import hexlet.code.service.StatusService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,8 +39,6 @@ public class StatusController {
 
     private final StatusService statusService;
 
-    private final StatusRepository statusRepository;
-
 
     @Operation(summary = "Create new status")
     @ApiResponse(responseCode = "201", description = "Status created")
@@ -59,9 +56,7 @@ public class StatusController {
     ))
     @GetMapping
     public List<Status> getAll() {
-        return statusRepository.findAll()
-                .stream()
-                .toList();
+        return statusService.getAllTaskStatuses();
     }
 
 
@@ -72,7 +67,7 @@ public class StatusController {
             @ApiResponse(responseCode = "404", description = "Status with this id is not found")})
     @GetMapping(ID)
     public Status getStatusById(@PathVariable final Long id) {
-        return statusRepository.findById(id).get();
+        return statusService.getTaskStatusById(id);
     }
 
 
@@ -93,6 +88,6 @@ public class StatusController {
             @ApiResponse(responseCode = "404", description = "Status with this id is not found")})
     @DeleteMapping(ID)
     public void delete(@PathVariable final long id) {
-        statusRepository.deleteById(id);
+        statusService.deleteTaskStatusById(id);
     }
 }

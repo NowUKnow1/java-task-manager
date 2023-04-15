@@ -1,46 +1,47 @@
 package hexlet.code.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.validation.constraints.NotBlank;
-
 import java.util.Date;
+import java.util.List;
 
-import static javax.persistence.GenerationType.IDENTITY;
 import static javax.persistence.TemporalType.TIMESTAMP;
 
 @Entity
+@Table(name = "labels")
 @Getter
 @Setter
-@Table(name = "labels")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Label {
-
     @Id
-    @GeneratedValue(strategy = IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //name - обязательное. Минимум 1 символ. Названия меток могу быть любыми
-    @NotBlank
+    @NotBlank(message = "Label Name should not be empty")
+    @Column(name = "name")
     private String name;
 
-
-    //createdAt - дата создания метки
     @CreationTimestamp
     @Temporal(TIMESTAMP)
+    @Column(name = "createdAt")
     private Date createdAt;
 
-    public Label(final Long id) {
-        this.id = id;
-    }
+    @JsonIgnore
+    @ManyToMany(mappedBy = "labels")
+    private List<Task> tasks;
 }

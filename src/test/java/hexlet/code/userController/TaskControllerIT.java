@@ -111,8 +111,8 @@ public class TaskControllerIT {
         TaskDto taskDto = new TaskDto(
                 "task",
                 "des",
-                task.getExecutor().getId(),
                 task.getTaskStatus().getId(),
+                task.getExecutor().getId(),
                 Set.of(label.getId()));
 
         utils.perform(put(BASE_TASK_URL + ID, task.getId())

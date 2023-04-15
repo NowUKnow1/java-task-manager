@@ -1,73 +1,80 @@
 package hexlet.code.service;
 
+import com.querydsl.core.types.Predicate;
 import hexlet.code.dto.TaskDto;
 import hexlet.code.model.Label;
 import hexlet.code.model.Status;
 import hexlet.code.model.Task;
 import hexlet.code.model.User;
+import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.stream.Collectors;
+
 
 @Service
 @AllArgsConstructor
+@Log4j2
 public class TaskServiceImpl implements TaskService {
-
     private final TaskRepository taskRepository;
+
     private final UserService userService;
+
     private final StatusService statusService;
 
+    private final LabelRepository labelRepository;
+
+
     @Override
-    public Task createNewTask(TaskDto dto) {
-        final Task newTask = fromDto(dto);
-        return taskRepository.save(newTask);
+    public Task getTaskById(long id) {
+        return taskRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Task with that id is not exist"));
     }
 
     @Override
-    public Task updateTask(final long id, final TaskDto dto) {
-        final Task task = taskRepository.findById(id).get();
-        merge(task, dto);
+    public Iterable<Task> getAllTasks(Predicate predicate) {
+        return taskRepository.findAll(predicate);
+    }
+
+    @Override
+    public Task createNewTask(TaskDto taskDTO) {
+        Task task = new Task();
+        matDTOtoModel(taskDTO, task);
         return taskRepository.save(task);
     }
 
-    private void merge(final Task task, final TaskDto dto) {
-        final Task newTask = fromDto(dto);
-        task.setExecutor(newTask.getExecutor());
-        task.setTaskStatus(newTask.getTaskStatus());
-        task.setName(newTask.getName());
-        task.setDescription(newTask.getDescription());
-        task.setLabels(newTask.getLabels());
+    @Override
+    public Task updateTask(long id, TaskDto taskDTO) {
+        Task task = getTaskById(id);
+        matDTOtoModel(taskDTO, task);
+        return taskRepository.save(task);
     }
 
-    private Task fromDto(final TaskDto dto) {
+    @Override
+    public void deleteTaskById(long id) {
+        taskRepository.deleteById(id);
+    }
+
+    private void matDTOtoModel(TaskDto taskDTO, Task task) {
         final User author = userService.getCurrentUser();
-        final User executor = Optional.ofNullable(dto.getExecutorId())
-                .map(User::new)
-                .orElse(null);
-        final Status status = Optional.ofNullable(dto.getTaskStatusId())
-                .map(Status::new)
-                .orElse(null);
-        final Set<Label> labels = Optional.ofNullable(dto.getLabelIds())
-                .orElse(Set.of())
-                .stream()
-                .filter(Objects::nonNull)
-                .map(Label::new)
-                .collect(Collectors.toSet());
-
-
-        return Task.builder()
-                .author(author)
-                .executor(executor)
-                .taskStatus(status)
-                .labels(labels)
-                .name(dto.getName())
-                .description(dto.getDescription())
-                .build();
+        final Status taskStatus = statusService.getTaskStatusById(taskDTO.getTaskStatusId());
+        final Long executorId = taskDTO.getExecutorId();
+        if (executorId != null) {
+            task.setExecutor(userService.getUserById(executorId));
+        }
+        if (taskDTO.getLabelIds() != null) {
+            final Set<Label> labels = new HashSet<>(labelRepository.findAllById(taskDTO.getLabelIds()));
+            task.setLabels(labels);
+        }
+        task.setName(taskDTO.getName());
+        task.setDescription(taskDTO.getDescription());
+        task.setAuthor(author);
+        task.setTaskStatus(taskStatus);
     }
 }
 

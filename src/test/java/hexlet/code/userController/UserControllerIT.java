@@ -89,9 +89,9 @@ public class UserControllerIT {
     public void getAllUsers() throws Exception {
         utils.regDefaultUser();
         UserDto userDto = new UserDto(
+                TEST_USERNAME_2,
                 "name",
                 "fname",
-                TEST_USERNAME_2,
                 "pass"
         );
         utils.regUser(userDto);
@@ -146,9 +146,10 @@ public class UserControllerIT {
 
         final Long userId = userRepository.findByEmail(TEST_USERNAME).get().getId();
 
-        final var userDto = new UserDto("new name",
-                "new last name",
+        final var userDto = new UserDto(
                 TEST_USERNAME_2,
+                "new name",
+                "new last name",
                 "new pass");
 
         final var updateRequest = put(BASE_USER_URL + ID, userId)
@@ -178,9 +179,9 @@ public class UserControllerIT {
     public void deleteUserFails() throws Exception {
         utils.regDefaultUser();
         utils.regUser(new UserDto(
+                TEST_USERNAME_2,
                 "firstName",
                 "lastName",
-                TEST_USERNAME_2,
                 "pass"
         ));
 

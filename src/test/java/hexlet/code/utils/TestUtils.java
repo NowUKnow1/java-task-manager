@@ -67,9 +67,9 @@ public class TestUtils {
     }
 
     private final UserDto testUserDto = new UserDto(
+            TEST_USERNAME,
             "firstName",
             "lastName",
-            TEST_USERNAME,
             "pass"
     );
     public UserDto getTestUserDto() {
@@ -114,8 +114,8 @@ public class TestUtils {
 
         TaskDto taskDto = new TaskDto("Task",
                 "description",
-                user.getId(),
                 taskStatus.getId(),
+                user.getId(),
                 Set.of(label.getId()));
 
         return perform(post(BASE_TASK_URL)
