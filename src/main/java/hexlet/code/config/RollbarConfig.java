@@ -1,4 +1,4 @@
-/*package hexlet.code.config;
+package hexlet.code.config;
 
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
@@ -14,7 +14,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @ComponentScan({"hexlet.code"})
 public class RollbarConfig {
 
-    @Value("${rollbar_token:}")  //6878a44065084d5cae10f1872d45bac0
+    @Value("${rollbar_token:}")
     private String rollbarToken;
 
     @Value("${spring.profiles.active:}")
@@ -32,4 +32,3 @@ public class RollbarConfig {
                 .build();
     }
 }
-*/
