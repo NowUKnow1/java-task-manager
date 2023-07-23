@@ -11,10 +11,15 @@
 **Технологии:**
 
 Java 17
+
 Spring Boot, MVC, Data JPA, Validator
+
 Swagger, Lombok
+
 Gradle
+
 Liquibase, H2, PostgreSQL
+
 Spring Security, JWT
 
 **Разработка:**
@@ -22,7 +27,9 @@ Spring Security, JWT
 Прежде чем Вы сможете собрать этот проект, Вы должны установить и настроить следующие зависимости на своем компьютере:
 
 JDK 17
+
 Gradle 7.4
+
 Node.js 16.13.1
 
 ## Сборка проекта
